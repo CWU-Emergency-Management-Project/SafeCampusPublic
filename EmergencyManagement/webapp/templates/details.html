@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .live-letter {
+    position: relative;
+  }
+  .live-letter::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 30%;
+    right: 5px;
+    transform: translate(50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: red;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.2;
+    }
+    100% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+  }
+</style>
+<div class="container">
+    <div class="row pt-2">
+      <div class="col-sm-10">
+        <h4>Building: {{ building.name }}</h4>
+        <h6>{{ building.type }}</h6>
+      </div>
+      <div class="col-sm-2 flex justify-content-end align-items-center">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+            Options
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li><a class="dropdown-item btn" href="{{ building.get_admin_url }}">Edit in Admin Portal</a></li>
+            <li><a class="dropdown-item disabled" href="#">Start Event</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card mt-2">
+            <div class="card-body">
+              <strong>Live Device Count: {{ building.get_recent_count }}</strong><br>
+              Last Modified: {{ building.get_count_last_modified }}
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card mt-2">
+            <div class="card-body">
+              <strong>Estimated Device Count: {{ building.estimateNumber }}</strong> <br>
+              Last Modified: {{ building.estimate_modified_at }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <form id="trend-form">
+      <label for="weekday">Select a Weekday:</label>
+      <select name="weekday" id="weekday">
+        <option value="1">Monday</option>
+        <option value="2">Tuesday</option>
+        <option value="3">Wednesday</option>
+        <option value="4">Thursday</option>
+        <option value="5">Friday</option>
+        <option value="6">Saturday</option>
+        <option value="0">Sunday</option>
+      </select>
+    </form>
+  <script>
+    const weekday = document.getElementById("weekday");
+    const today = new Date().getDay(); // returns a number from 0 (Sunday) to 6 (Saturday)
+    weekday.options[today - 1].selected = true; 
+  </script>
+
+  <div id="trend-chart-container container" >
+    <div class='col-lg-11'>
+    <canvas id="trend-chart"></canvas>
+    </div>
+  </div>
+</div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script> 
+    const currentHour = new Date().getHours();
+    const currentHourIndex = currentHour - 1; // assuming the counts array starts at hour 1
+    function updateChart(trendData) {
+      const labels = trendData.map((data) => data.hour); // get the hours as labels
+      const counts = trendData.map((data) => data.count); // get the counts as data
+      const ctx = document.getElementById("trend-chart").getContext("2d");
+    
+      if (window.myChart) {
+        window.myChart.destroy();
+      }
+    
+      window.myChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Average Devices",
+              data: counts,
+              backgroundColor: (context) => {
+                if (context.dataIndex === currentHourIndex) {
+                  return "#A30F32"; // set the current hour bar to red
+                } else {
+                  return "#A30F3280"; // set all other bars to blue
+                }
+              },
+              tension: 0.1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            yAxes: [
+              {
+                ticks: {
+                  beginAtZero: true,
+                },
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    const trendForm = document.querySelector('#trend-form');
+    const weekdaySelect = document.querySelector('#weekday');
+
+    weekdaySelect.addEventListener('change', () => {
+      event.preventDefault();
+      const formData = new FormData(trendForm);
+      const weekday = formData.get('weekday');
+      let buildingId = "{{ building.uuid }}";
+      fetch(`/getDeviceCountJSON/${buildingId}/${weekday}`)
+      .then(response => response.json())
+      .then(data => {
+        const trendData = data.trend_data;
+        updateChart(trendData);
+      })
+      .catch(error => console.error(error));
+    }); // Closing the event listener with a closing curly brace
+
+    function load() {
+      const formData = new FormData(trendForm);
+      const weekday = formData.get('weekday');
+      let buildingId = "{{ building.uuid }}";
+      fetch(`/getDeviceCountJSON/${buildingId}/${weekday}`)
+      .then(response => response.json())
+      .then(data => {
+        const trendData = data.trend_data;
+        updateChart(trendData);
+      })
+      .catch(error => console.error(error));
+    }
+    window.addEventListener('load', load);
+</script> 
+{% endblock %}

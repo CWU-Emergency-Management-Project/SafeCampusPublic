@@ -1,0 +1,18 @@
+{% extends 'admin/base.html' %}
+
+<!-- Testing removing the dark mode to make it match main site -->
+{% block dark-mode-vars %}{% endblock %}
+
+<!-- Changing default styles -->
+{% block extrastyle %}{{ block.super }}
+<style>
+:root {
+  --primary: #A30F32;
+  --secondary: #8B0025;
+  --link-selected-fg: #8f5bb2;
+  --accent: #FFFFFF;
+  --header-color: #FFFFFF;
+
+}
+</style>
+{% endblock %}

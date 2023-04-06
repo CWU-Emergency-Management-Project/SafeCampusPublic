@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+        crossorigin=""/>
+
+        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+            crossorigin="">
+        </script>
+    </head>
+    <body style="background-color: #A30F32;">
+        <div class="container-fluid">
+            <div class="row">
+              <div class="col-lg-9">
+                <div id="map" style="height: 90vh"></div>
+              </div>
+              <div class="col-lg-3">
+                <form method="get" style="height: 90vh;>
+                  <input type="text" name="q" placeholder="Search">
+                  <button type="submit">Search</button>
+                </form>
+                <div class="card-list" style="height: 90vh; overflow-y: scroll;">
+                    {% if buildings %}
+                    {% for building in buildings %}
+                    <div class="card" style="margin-top: 10px">
+                      <div class="card-body">
+                        <h5 class="card-title"><a id="" href="{{ building.get_absolute_url }}"> {{ building.name }} </a></h5>
+                        <h6 class="card-subtitle mb-2 text-muted"> {{ building.type }}</h6>
+                        <a id="" href="{{ building.get_absolute_url }}"><a>
+                        <p class="card-text" style="margin-bottom: 0px">Live Count: {{ building.deviceCount }}</p>
+                        <p class="card-text" style="margin-bottom: 0px">Estimated Count: {{ building.estimateNumber }}</p>
+                        <p class="card-text"><small class="text-muted">Last Updated: {{ building.device_modified_at }}</small></p>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <!-- CSS Style to set the css for the map-->
+        <style>
+          #map { 
+          }
+        </style>
+
+        <!-- Java Script to create map on page-->
+        <script>
+            var map = L.map('map').setView([47.00413, -120.53858], 17);
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+        </script>
+
+        <!-- Java Script to add map markers --> <!-- Previous color: #A30F32-->
+        {% for building in buildings %}
+        <script>
+            var originalStyle = {fillOpacity: 0.5, fillColor: '#A30F32', weight: 1};
+          
+            var polygon = L.polygon({{building.poly}}).addTo(map).setStyle(originalStyle)
+              .on('click', function(e) {
+                var popup = L.popup()
+                  .setLatLng(e.latlng)
+                  .setContent(`<h5>{{ building.name }}</h5><a id='building-link' href='{{ building.get_absolute_url }}'>View details</a><br>Current Total: {{ building.deviceCount }}<br>Last Updated: {{ building.device_modified_at }}`)
+                  .openOn(map);
+              });
+          </script>
+        {%endfor%}
+        
+        <!-- Add numbers to the polygons made by Ryan -->
+        <style>
+            .circle {
+                display: table-cell;
+                text-align: center;
+                vertical-align: middle;
+                border-radius: 50%;
+                border-style: solid;
+                font-size: 12px;
+                font-weight: bold;
+              }
+              .circle.circle1 {
+                background: rgba(0, 57, 128, 0.2);
+                border-color: #3388FF;
+                color: white;
+              }
+              .circle.circle2 {
+                background: rgba(0, 57, 128, 0.2);
+                border-color: green;
+                color: yellow;
+              }
+        </style>
+
+        <script>
+            function circleWithText2(latLng, txt, radius, borderWidth, circleClass) {
+                var size = radius * 2;
+                var style = 'style="width: ' + size + 'px; height: ' + size + 'px; border-width: ' + borderWidth + 'px;"';
+                var iconSize = size + (borderWidth * 2);
+                var icon = L.divIcon({
+                  html: '<span class="' + 'circle ' + circleClass + '" ' + style + '>' + txt + '</span>',
+                  className: '',
+                  iconSize: [iconSize, iconSize]
+                });
+                var marker = L.marker(latLng, {
+                  icon: icon
+                });
+                return(marker);
+            }
+
+            
+        </script>
+        {% for building in buildings %}
+        <script>
+            circleWithText2([{{building.lat}}, {{building.long}}], '{{building.deviceCount}}', 5, 0, 'circle1').addTo(map);
+        </script>
+        {%endfor%}
+        
+        <!-- Add Poll data to the map -->
+        {% for emergIndicator in emergIndicators %}
+          {% if emergeIndicator.enabled == true %}
+            {% for result in results %}
+              {% if result.status == "Safe" %}
+                <script>
+                  var circle = L.circle([{{result.lat}}, {{result.long}}], {
+                      color: 'green',
+                      fillColor: '#0fff5d',
+                      fillOpacity: 1.0,
+                      radius: 2
+                  }).addTo(map)
+                    .bindPopup('<h5>{{result.status}}</h5>')
+                    .openOn(map);
+                </script>  
+              {% elif result.status == "Not sure" %}
+                <script>
+                  var circle = L.circle([{{result.lat}}, {{result.long}}], {
+                      color: 'blue',
+                      fillColor: '#0f52ff',
+                      fillOpacity: 1.0,
+                      radius: 2
+                  }).addTo(map)
+                    .bindPopup('<h5>{{result.status}}</h5>')
+                    .openOn(map);
+                </script>
+              {% elif result.status == "Unsafe" %}
+                <script>
+                    var circle = L.circle([{{result.lat}}, {{result.long}}], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 1.0,
+                        radius: 2
+                    }).addTo(map)
+                      .bindPopup('<h5>{{result.status}}</h5>')
+                      .openOn(map);
+                </script>
+              {%endif%}
+            {%endfor%}
+          {%endif%}
+        {%endfor%}
+
+    </body>
+
+{% endblock %}

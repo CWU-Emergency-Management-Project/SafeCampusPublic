@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- templates/building_form.html -->
+
+<script>
+    function fetchBuildingData() {
+      document.getElementById('fail_dialog').style.display = 'none';
+      // Get the way ID entered by the user
+      var way_id = document.getElementById('way_id').value;
+      // Fetch the geometry and center point using an API endpoint
+      fetch('/getBuildingSearchJSON/?way_id=' + way_id)
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error(response.statusText);
+          }
+          return response.json();
+        })
+        .then(function(data) {
+          // Display the fetched data on the web page
+          document.getElementById('name').textContent = data.name;
+          document.getElementById('lat').textContent = data.lat;
+          document.getElementById('lon').textContent = data.lon;
+          // Show the confirmation dialog
+          document.getElementById('confirm_dialog').style.display = 'block';
+        })
+        .catch(function(error) {
+          console.error(error);
+          document.getElementById('fail_dialog').style.display = 'block';
+        });
+    }
+    function submitForm() {
+      document.getElementById('building_form').submit();
+    }
+    function cancelForm() {
+      document.getElementById('confirm_dialog').style.display = 'none';
+    }
+  </script>
+
+  <div class="container">
+    <h1 class="mt-5 mb-4">Add New Building</h1>
+    <form id="building_form" method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="way_id" class="form-label">Way ID:</label>
+            <input type="text" name="way_id" id="way_id" class="form-control">
+        </div>
+        <div class="mb-3">
+            <button type="button" onclick="fetchBuildingData()" class="btn btn-primary">OpenStreetMaps Search</button>
+        </div>
+    </form>
+    <div id="confirm_dialog" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Search Results:</h5>
+                <p class="card-text">Name: <span id="name"></span></p>
+                <p class="card-text">Coordinates: <span id="lat"></span>, <span id="lon"></span></p>
+                <p class="card-text">Is this data correct?</p>
+                <button type="button" onclick="submitForm()" class="btn btn-success">Yes</button>
+                <button type="button" onclick="cancelForm()" class="btn btn-danger">No</button>
+            </div>
+        </div>
+    </div>
+    <div id="fail_dialog" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Search Results:</h5>
+                <p class="card-text">None</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

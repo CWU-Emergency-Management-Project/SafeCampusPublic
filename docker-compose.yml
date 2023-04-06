@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  web:
+    container_name: "SafeCampus"   
+    build: .
+    command: python /app/EmergencyManagement/manage.py runserver 0.0.0.0:7999
+    volumes:
+      - .:/app
+    ports:
+      - "7999:7999"
+

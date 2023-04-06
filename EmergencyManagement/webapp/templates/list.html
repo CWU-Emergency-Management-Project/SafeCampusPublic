@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <div class="row pt-2">
+    <div class="form-inline">
+      <div class="input-group mb-3 pt-0">
+        <input type="text" name="q" id="search-input" placeholder="Search" class="form-control">
+        <div class="input-group-append">
+          <button class="btn btn-outline-primary mx-2" id="search-button" type="button">Search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-list" id="card-list"></div>
+  <style>
+    a {
+      color: #4C879E
+    }
+    .card a:link {
+      text-decoration: none;
+    }
+    
+    .card a:visited {
+      text-decoration: none;
+    }
+    
+    .card a:hover {
+      text-decoration: underline;
+    }
+    
+    .card a:active {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    var searchInput = document.getElementById('search-input');
+    var searchButton = document.getElementById('search-button');
+    var cardListDiv = document.getElementById('card-list');
+  
+    window.onload = function() {
+      searchBuildings("");
+    };
+
+    searchInput.addEventListener('keypress', function(event) {
+      if (event.keyCode === 13) { // 13 is the keycode for the Enter key
+        searchBuildings(searchInput.value);
+      }
+    });
+
+    searchButton.addEventListener('click', function() {
+      searchBuildings(searchInput.value);
+    });
+
+
+    function searchBuildings(query) {
+      // Make a GET request to /getSearchJSON/ with the query as a parameter
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/map/search/?q=' + query);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var buildings = JSON.parse(xhr.responseText);
+          cardListDiv.innerHTML = '';
+          for (var i = 0; i < buildings.length; i++) {
+            var building = buildings[i];
+            var cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.id = 'card-' + building.id;
+            cardDiv.style.marginBottom = '10px';
+  
+            var cardBodyDiv = document.createElement('div');
+            cardBodyDiv.className = 'card-body';
+  
+            var cardTitle = document.createElement('h5');
+            cardTitle.className = 'card-title';
+            var cardTitleLink = document.createElement('a');
+            cardTitleLink.href = building.url;
+            cardTitleLink.textContent = building.name;
+            cardTitle.appendChild(cardTitleLink);
+  
+            var cardSubtitle = document.createElement('h6');
+            cardSubtitle.className = 'card-subtitle mb-2 text-muted';
+            cardSubtitle.textContent = building.type;
+  
+            var cardText1 = document.createElement('p');
+            cardText1.className = 'card-text';
+            cardText1.style.marginBottom = '0px';
+            cardText1.textContent = 'Live Count: ' + building.deviceCount;
+  
+            var cardText2 = document.createElement('p');
+            cardText2.className = 'card-text';
+            cardText2.style.marginBottom = '0px';
+            cardText2.textContent = 'Estimated Count: ' + building.estimateNumber;
+  
+            var cardText3 = document.createElement('p');
+            var date = new Date(building.device_modified_at);
+            var formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+            formattedDate = formattedDate.replace(',', '');
+            formattedDate = formattedDate.replace(' ', ', ');
+            cardText3.className = 'card-text';
+            cardText3.textContent = 'Last Updated: ' + formattedDate;
+  
+            cardBodyDiv.appendChild(cardTitle);
+            cardBodyDiv.appendChild(cardSubtitle);
+            cardBodyDiv.appendChild(cardText1);
+            cardBodyDiv.appendChild(cardText2);
+            cardBodyDiv.appendChild(cardText3);
+  
+            cardDiv.appendChild(cardBodyDiv);
+            cardListDiv.appendChild(cardDiv);
+          }
+        }
+      }
+      xhr.send();
+    }
+  </script>
+
+</div>
+{% endblock %}

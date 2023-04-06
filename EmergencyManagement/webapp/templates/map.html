@@ -1,0 +1,690 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+        crossorigin=""/>
+
+        <!-- Make sure you put this AFTER Leaflet's CSS -->
+        <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+            integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+            crossorigin=""></script>
+            <link rel="stylesheet" href="//unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" type="text/css">
+            <script src="//unpkg.com/leaflet-gesture-handling"></script>
+        <!-- Add JQuerry -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+    <body>
+      {% if messages %}
+      {% for message in messages %}
+        {% if message.tags == "success" %}
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% else %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endif%}
+      {% endfor %}
+
+      {% endif %}
+      <style>
+        .leaflet-tooltip {
+          font-size: 15px;
+          font-family: "Roboto", sans-serif;
+          font-weight: bold;
+          color: #ffffff;
+          background-color: transparent;
+          border: none;
+          box-shadow: none;
+          text-shadow: 2px 1px 10px #000;
+          weight: bold;
+        }
+        .leaflet-container a {
+          color: #4C879E
+        }
+        .leaflet-container a:hover {
+          text-decoration: underline;
+        }
+        .card a {
+          color: #4C879E
+        }
+        a:link {
+          text-decoration: none;
+        }
+        
+        a:visited {
+          text-decoration: none;
+        }
+        
+        .card a:hover {
+          text-decoration: underline;
+        }
+        
+        .card a:active {
+          text-decoration: underline;
+        }
+        .form-check-input:checked {
+          background-color: #4C879E;
+          border-color: #4C879E;
+      }
+
+      </style>
+      <div class="container-fluid">
+            <div class="row">
+              <div class="col-lg-9">
+                <div id="map" style="height: 90vh"></div>
+              </div>
+              <div class="col-lg-3 pt-2">
+                <!-- Button trigger modal -->
+                <div class="container px-0">
+                  <div class="row">
+                    <div class="col d-flex justify-content-start pb-3">
+                      
+                      <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                          Options
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                          <li><a class="dropdown-item btn"  data-bs-toggle="modal" data-bs-target="#Ravemodal" >Upload Rave Alert Data</a></li>
+                          <li><a class="dropdown-item btn"  data-bs-toggle="modal" data-bs-target="#Registrarmodal" >Upload Registrar Data</a></li>
+                          <li><a class="dropdown-item btn"  data-bs-toggle="modal" data-bs-target="#addbuildingmodal">Add Building</a></li>
+                        </ul>
+                      </div>
+                      <!--
+                      <button type="button" class="btn btn-primary" style="margin-right: 0.5rem !important;" data-bs-toggle="modal" data-bs-target="#Ravemodal">
+                        Rave Alert Data
+                      </button>
+                      <button type="button" class="btn btn-primary" style="margin-right: 0.5rem !important;" data-bs-toggle="modal" data-bs-target="#Registrarmodal">
+                        Registrar Data
+                      </button>
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addbuildingmodal">
+                        Add Building
+                      </button> -->
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Rave Alert Modal -->
+                <div class="modal fade" id="Ravemodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="staticBackdropLabel">Upload Registrar Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <body>
+                          <form method="POST" enctype="multipart/form-data">
+                              {% csrf_token %}
+                              {{csvForm.as_p}}
+                              <button ttype="button" class="btn btn-primary ">Upload</button>
+                          </form>
+                      </body>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Registrar Modal -->
+                <div class="modal fade" id="Registrarmodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="staticBackdropLabel">Upload Registrar Data</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <body>
+                          <form method="POST" enctype="multipart/form-data">
+                              {% csrf_token %}
+                              {{form.as_p}}
+                              <button ttype="button" class="btn btn-primary ">Upload</button>
+                          </form>
+                      </body>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Add Building Modal -->
+                <div class="modal fade" id="addbuildingmodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="staticBackdropLabel">Add New Building</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <script>
+                          function fetchBuildingData() {
+                            document.getElementById('fail_dialog').style.display = 'none';
+                            // Get the way ID entered by the user
+                            var way_id = document.getElementById('way_id').value;
+                            // Fetch the geometry and center point using an API endpoint
+                            fetch('/getBuildingSearchJSON/?way_id=' + way_id)
+                              .then(function(response) {
+                                if (!response.ok) {
+                                  throw new Error(response.statusText);
+                                }
+                                return response.json();
+                              })
+                              .then(function(data) {
+                                // Display the fetched data on the web page
+                                document.getElementById('name').textContent = data.name;
+                                document.getElementById('lat').textContent = data.lat;
+                                document.getElementById('lon').textContent = data.lon;
+                                // Show the confirmation dialog
+                                document.getElementById('confirm_dialog').style.display = 'block';
+                              })
+                              .catch(function(error) {
+                                console.error(error);
+                                document.getElementById('fail_dialog').style.display = 'block';
+                              });
+                          }
+                          function submitForm() {
+                            document.getElementById('building_form').submit();
+                          }
+                          function cancelForm() {
+                            document.getElementById('confirm_dialog').style.display = 'none';
+                          }
+                        </script>
+                      
+                        <div class="container">
+                          <form id="building_form" method="POST">
+                              {% csrf_token %}
+                              <div class="mb-3">
+                                  <label for="way_id" class="form-label">Way ID:</label>
+                                  <input type="text" name="way_id" id="way_id" class="form-control">
+                              </div>
+                              <div class="mb-3">
+                                  <button type="button" onclick="fetchBuildingData()" class="btn btn-primary">OpenStreetMaps Search</button>
+                              </div>
+                          </form>
+                          <div id="confirm_dialog" style="display: none;">
+                              <div class="card">
+                                  <div class="card-body">
+                                      <h5 class="card-title">Search Results:</h5>
+                                      <p class="card-text">Name: <span id="name"></span></p>
+                                      <p class="card-text">Coordinates: <span id="lat"></span>, <span id="lon"></span></p>
+                                      <p class="card-text">Is this data correct?</p>
+                                      <button type="button" onclick="submitForm()" class="btn btn-success">Yes</button>
+                                      <button type="button" onclick="cancelForm()" class="btn btn-danger">No</button>
+                                  </div>
+                              </div>
+                          </div>
+                          <div id="fail_dialog" style="display: none;">
+                              <div class="card">
+                                  <div class="card-body">
+                                      <h5 class="card-title">Search Results:</h5>
+                                      <p class="card-text">None</p>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <form method="post">
+                  {% csrf_token %}
+                  <div class="form-check form-switch">
+                    <!-- Adding CSS options for toggle switch-->
+                    <style>
+                      .emergencyInput:checked {
+                        background-color: red !important;
+                        transform: scale(1.5) !important;
+                        border: 0px;
+                      }
+                
+                      .emergencyInput:not(:checked) {
+                        transform: scale(1.5) !important;
+                      }
+                
+                      .emergencyLabel {
+                        font-size: 23px;
+                      }
+
+              
+                    </style>
+
+                    <!-- Add toggle switch and label to the view -->
+                    <input class="form-check-input emergencyInput" style="position: relative; left: 7px;" type="checkbox" id="flexSwitchCheckChecked" {% if emergIndicator.enabled == True %}checked{%endif%}>
+                    <label class="form-check-label pb-2 emergencyLabel" style="position: relative; bottom: 6px; left: 15px;" for="flexSwitchCheckChecked">Emergency Mode</label>
+                    
+                    <!-- Javascript code to add a confirmation message and to update the EmergencyModeIndicator in the database-->
+                    <script>
+                      const checkbox = document.getElementById('flexSwitchCheckChecked');
+                      
+                      // function to send an AJAX request to update the EmergencyModeIndicator value based on the toggle value
+                      function toggleEmergencyMode(isChecked) {
+                        const csrfToken = $('input[name=csrfmiddlewaretoken]').val();
+                        const url = 'toggle_emergency_indicator/';
+                
+                        $.ajax({
+                          url: url,
+                          type: 'POST',
+                          data: {
+                            'enabled': isChecked,
+                            'csrfmiddlewaretoken': csrfToken
+                          },
+                          success: function(response) {
+                          },
+                          complete: function() {
+                            setTimeout(function() {
+                              $('#flexSwitchCheckChecked').attr('disabled', false);
+                            }, 1000); // Delay the next toggle event for 1 second
+                          },
+                          beforeSend: function() {
+                            $('#flexSwitchCheckChecked').attr('disabled', true);
+                          },
+                          error: function(response) {
+                            // Handle the error response
+                          }
+                        });
+                      }
+                      
+                      // event listener for confirmation method
+                      checkbox.addEventListener('change', function() {
+                        const isChecked = this.checked;
+                        const message = isChecked ? 'Are you sure you want to activate Emergency Mode?' : 'Are you sure you want to disable Emergency Mode?';
+                        const confirmResult = confirm(message);
+                
+                        if (confirmResult) {
+                          toggleEmergencyMode(isChecked);
+                        } else {
+                          this.checked = !isChecked;
+                        }
+                      });
+                    </script>
+                  </div>
+                </form>
+
+                <div class="row">
+                  <div class="form-inline">
+                    <div class="input-group mb-3 pt-0">
+                      <input type="text" name="q" id="search-input" placeholder="Search" class="form-control">
+                      <div class="input-group-append">
+                        <button class="btn btn-primary mx-2" id="search-button" type="button">Search</button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+
+                
+                <div class="card-list" id="card-list" style="height: 73vh; overflow-y: scroll;">
+                </div>
+
+                <script>
+                  var searchInput = document.getElementById('search-input');
+                  var searchButton = document.getElementById('search-button');
+                  var cardListDiv = document.getElementById('card-list');
+                
+                  window.onload = function() {
+                    searchBuildings("");
+                  };
+
+                  searchInput.addEventListener('keypress', function(event) {
+                    if (event.keyCode === 13) { // 13 is the keycode for the Enter key
+                      searchBuildings(searchInput.value);
+                    }
+                  });
+
+                  searchButton.addEventListener('click', function() {
+                    searchBuildings(searchInput.value);
+                  });
+              
+
+                  function searchBuildings(query) {
+                    // Make a GET request to /getSearchJSON/ with the query as a parameter
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', '/map/search/?q=' + query);
+                    xhr.onload = function() {
+                      if (xhr.status === 200) {
+                        var buildings = JSON.parse(xhr.responseText);
+                        cardListDiv.innerHTML = '';
+                        for (var i = 0; i < buildings.length; i++) {
+                          var building = buildings[i];
+                          var cardDiv = document.createElement('div');
+                          cardDiv.className = 'card';
+                          cardDiv.id = 'card-' + building.id;
+                          cardDiv.style.marginBottom = '10px';
+                
+                          var cardBodyDiv = document.createElement('div');
+                          cardBodyDiv.className = 'card-body';
+                
+                          var cardTitle = document.createElement('h5');
+                          cardTitle.className = 'card-title';
+                          var cardTitleLink = document.createElement('a');
+                          cardTitleLink.href = building.url;
+                          cardTitleLink.textContent = building.name;
+                          cardTitle.appendChild(cardTitleLink);
+                
+                          var cardSubtitle = document.createElement('h6');
+                          cardSubtitle.className = 'card-subtitle mb-2 text-muted';
+                          cardSubtitle.textContent = building.type;
+                
+                          var cardText1 = document.createElement('p');
+                          cardText1.className = 'card-text';
+                          cardText1.style.marginBottom = '0px';
+                          cardText1.textContent = 'Live Count: ' + building.deviceCount;
+                
+                          var cardText2 = document.createElement('p');
+                          cardText2.className = 'card-text';
+                          cardText2.style.marginBottom = '0px';
+                          cardText2.textContent = 'Estimated Count: ' + building.estimateNumber;
+                
+                          var cardText3 = document.createElement('p');
+                          var date = new Date(building.device_modified_at);
+                          var formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+                          formattedDate = formattedDate.replace(',', '');
+                          formattedDate = formattedDate.replace(' ', ', ');
+                          cardText3.className = 'card-text';
+                          cardText3.textContent = 'Last Updated: ' + formattedDate;
+                
+                          cardBodyDiv.appendChild(cardTitle);
+                          cardBodyDiv.appendChild(cardSubtitle);
+                          cardBodyDiv.appendChild(cardText1);
+                          cardBodyDiv.appendChild(cardText2);
+                          cardBodyDiv.appendChild(cardText3);
+                
+                          cardDiv.appendChild(cardBodyDiv);
+                          cardListDiv.appendChild(cardDiv);
+
+                          cardDiv.addEventListener('click', (function(building) {
+                            return function() {
+                              // Get the polygon for this building
+                              var polygon = building.polygon;
+                    
+                              // Zoom and pan the map to the building's location
+                              map.flyTo(new L.LatLng(building.lat, building.long), 18);
+                              map.once('moveend', function() {
+                                openPopup(building)();
+                              });
+                            };
+                          })(building));
+                        }
+                      }
+                    };
+                    xhr.send();
+                  }
+                </script>
+              </div>
+            </div>
+          </div>
+
+        <!-- CSS Style to set the css for the map-->
+        <style>
+          #map { 
+          }
+        </style>
+
+        <!-- Java Script to create map on page-->
+        <script>
+          var map = L.map("map", {
+            center: [47.00413, -120.53858],
+            zoom: 17,
+            doubleClickZoom: false,
+            gestureHandling: true
+        });
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            var command = L.control({position: 'topright'});
+            command.onAdd = function (map) {
+              var div = L.DomUtil.create('div');
+              div.className = 'leaflet-control-layers leaflet-control-layers-expanded pb-0';
+            
+              
+              var buildingTypes = {{ types|safe }};
+              buildingTypes.unshift("All");
+              buildingTypes =buildingTypes.slice(0,-1)
+              for (var i = 0; i < buildingTypes.length; i++) {
+                var type = buildingTypes[i];
+                var inputId = 'building-type-' + i;
+                var inputName = 'building-type';
+                var inputValue = type;
+                var label = type;
+            
+                var input = L.DomUtil.create('input', 'form-check-input');
+                input.type = 'checkbox';
+                input.value = inputValue;
+                input.id = inputId;
+                input.name = inputName;
+                input.checked = false;
+                
+            
+                var labelElement = L.DomUtil.create('label', 'form-check-label');
+                labelElement.htmlFor = inputId;
+                labelElement.textContent = label;
+            
+                var divElement = L.DomUtil.create('div', 'form-check');
+                divElement.appendChild(input);
+                divElement.appendChild(labelElement);
+            
+                div.appendChild(divElement);
+              }
+            
+              return div;
+            };
+            command.addTo(map); //your map variable
+            let originalStyle = {fillOpacity: 0.5, fillColor: '#A30F32', weight: 1};
+            let buildingsLayer = L.layerGroup().addTo(map);
+            var checkboxes = document.querySelectorAll('input[type=checkbox][name=building-type]');
+
+            function createClickHandler(building) {
+              return function(e) {
+                var date = new Date(building.device_modified_at);
+                var formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+                formattedDate = formattedDate.replace(',', '');
+                formattedDate = formattedDate.replace(' ', ', ');
+                var popup = L.popup()
+                  .setLatLng(new L.LatLng(building.lat, building.long))
+                  .setContent(`<a id='building-link' href='${building.url}'><h5>${building.name}</h5></a>Live Count: ${building.deviceCount}<br>Estimated Count: ${building.estimateNumber}<br>Last Updated: ${formattedDate}`)
+                  .openOn(map);
+
+              }
+            }
+
+            // Add an event listener to each checkbox
+            checkboxes.forEach(function(checkbox) {
+              checkbox.addEventListener('change', function() {
+                // Get the checked checkboxes
+                var checkedCheckboxes = Array.from(checkboxes).filter(function(cb) {
+                  return cb.checked;
+                });
+
+                // Get the values of the checked checkboxes
+                var checkedValues = checkedCheckboxes.map(function(cb) {
+                  return cb.value;
+                });
+
+                // Make an AJAX request to the server to get the filtered list of buildings
+                var xhr = new XMLHttpRequest();
+                console.log(checkedValues.join(','));
+                xhr.open('GET', '/getBuildingFilterJSON/?type=' + checkedValues.join(','));
+                xhr.onload = function() {
+                  if (xhr.status === 200) {
+                    var buildings = JSON.parse(xhr.responseText);
+                    console.log(buildings);
+                    buildingsLayer.clearLayers();
+                    for (var i = 0; i < buildings.length; i++) {
+                      var building = buildings[i];
+                      var date = new Date(building.device_modified_at);
+                      var formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+                      formattedDate = formattedDate.replace(',', '');
+                      formattedDate = formattedDate.replace(' ', ', ');
+                      if (building.poly) {
+                        var polygon = L.polygon(JSON.parse(building.poly)).addTo(buildingsLayer).setStyle(originalStyle)
+                        .on('click', createClickHandler(building));
+                      }
+                      var tooltip = L.tooltip({permanent: true, direction: 'center'})
+                      .setContent(`${building.deviceCount}`);
+                      polygon.bindTooltip(tooltip)
+                      tooltip.setLatLng(new L.LatLng(building.lat, building.long));
+
+
+                    }
+                    // Do something with the filtered list of buildings
+                  }
+                };
+                xhr.send();
+              });
+            });
+        </script>
+
+        
+        <!-- Java Script to add map markers --> <!-- Previous color: #A30F32 -->
+        
+        <!-- Add numbers to the polygons made by Ryan -->
+        <style>
+            .circle {
+                display: table-cell;
+                text-align: center;
+                vertical-align: middle;
+                border-radius: 50%;
+                border-style: solid;
+                font-size: 12px;
+                font-weight: bold;
+              }
+              .circle.circle1 {
+                background: rgba(0, 57, 128, 0.2);
+                border-color: #3388FF;
+                color: white;
+              }
+              .circle.circle2 {
+                background: rgba(0, 57, 128, 0.2);
+                border-color: green;
+                color: yellow;
+              }
+        </style>
+
+        <script>
+            function circleWithText2(latLng, txt, radius, borderWidth, circleClass) {
+                var size = radius * 2;
+                var style = 'style="width: ' + size + 'px; height: ' + size + 'px; border-width: ' + borderWidth + 'px;"';
+                var iconSize = size + (borderWidth * 2);
+                var icon = L.divIcon({
+                  html: '<span class="' + 'circle ' + circleClass + '" ' + style + '>' + txt + '</span>',
+                  className: '',
+                  iconSize: [iconSize, iconSize]
+                });
+                var marker = L.marker(latLng, {
+                  icon: icon
+                });
+                return(marker);
+            }
+
+            
+        </script>
+
+        <!-- Add Poll data to the map -->
+          {% if emergIndicator.enabled == True %}
+            {% for result in results %}
+              {% if result.status == "Safe" %}
+                <script>
+                  var circle = L.circle([{{result.lat}}, {{result.long}}], {
+                      color: 'green',
+                      fillColor: '#0fff5d',
+                      fillOpacity: 1.0,
+                      radius: 2
+                  }).addTo(map)
+                    .bindPopup('<h5>{{result.status}}</h5>')
+                    .addTo(map);
+                </script>  
+              {% elif result.status == "Not sure" %}
+                <script>
+                  var circle = L.circle([{{result.lat}}, {{result.long}}], {
+                      color: 'blue',
+                      fillColor: '#0f52ff',
+                      fillOpacity: 1.0,
+                      radius: 2
+                  }).addTo(map)
+                    .bindPopup('<h5>{{result.status}}</h5>')
+                    .addTo(map);
+                </script>
+              {% elif result.status == "Unsafe" %}
+                <script>
+                    var circle = L.circle([{{result.lat}}, {{result.long}}], {
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 1.0,
+                        radius: 2
+                    }).addTo(map)
+                      .bindPopup('<h5>{{result.status}}</h5>')
+                      .addTo(map);
+                </script>
+              {%endif%}
+            {%endfor%}
+          {%endif%}
+
+          <script>
+
+            function openPopup(building) {
+              return function() {
+                var date = new Date(building.device_modified_at);
+                var formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+                formattedDate = formattedDate.replace(',', '');
+                formattedDate = formattedDate.replace(' ', ', ');
+                var popup = L.popup()
+                  .setLatLng(new L.LatLng(building.lat, building.long))
+                  .setContent(`<a id='building-link' href='${building.url}'><h5>${building.name}</h5></a>Live Count: ${building.deviceCount}<br>Estimated Count: ${building.estimateNumber}<br>Last Updated: ${formattedDate}`)
+                  .openOn(map);
+              }
+            }
+          
+
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open('GET', '/getBuildingFilterJSON/?type=All');
+            xhr2.onload = function() {
+              if (xhr2.status === 200) {
+                var buildings = JSON.parse(xhr2.responseText);
+                console.log(buildings);
+                buildingsLayer.clearLayers();
+                for (var i = 0; i < buildings.length; i++) {
+                  var building = buildings[i];
+                  var date = new Date(building.device_modified_at);
+                  var formattedDate = date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+                  formattedDate = formattedDate.replace(',', '');
+                  formattedDate = formattedDate.replace(' ', ', ');
+                  if (building.poly) {
+                    var polygon = L.polygon(JSON.parse(building.poly)).addTo(buildingsLayer).setStyle(originalStyle)
+                    .on('click', createClickHandler(building));
+                  }
+                  var tooltip = L.tooltip({permanent: true, direction: 'center'})
+                  .setContent(`${building.deviceCount}`);
+                  polygon.bindTooltip(tooltip)
+                  tooltip.setLatLng(new L.LatLng(building.lat, building.long));
+
+
+                }
+                // Do something with the filtered list of buildings
+              }
+            };
+            
+
+            var allCheckbox = document.getElementById("building-type-0");
+            allCheckbox.checked = true;
+            xhr2.send();
+              // Zoom and pan the map to the building's location
+            </script>
+    </body>
+
+{% endblock %}

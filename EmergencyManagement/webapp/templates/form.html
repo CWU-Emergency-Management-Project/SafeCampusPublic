@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <html>
+        <head>
+            <title>Add Registrar Data </title>
+        </head>
+        <body>
+            <h1>Add Registrar Data </h1>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{form.as_p}}
+                <button type="submit">Upload</button>
+            </form>
+        </body>
+    
+    </html>
+    
+
+
+
+{% endblock %}

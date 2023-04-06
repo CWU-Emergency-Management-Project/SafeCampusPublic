@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CWU Safety Status</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+    <style>
+        body {
+            background-color: #F8F9FA;
+          }
+          .accent-color {
+            color: #A30F32;
+          }
+    </style>
+    <div class="container-fluid d-flex justify-content-center mt-3">
+        <div class="row">
+            <h1 class="text-center accent-color">CWU Safety Status</h1>
+        </div>
+    </div>
+    <br>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label accent-color" for="{{ form.status.id_for_label }}">Status:</label>
+                        {% for choice in form.status %}
+                            <div class="form-check">
+                                {{ choice.tag }}
+                                <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="{{ form.lat.name }}" id="id_lat">
+                    <input type="hidden" name="{{ form.long.name }}" id="id_long">
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="send_location" name="send_location">
+                        <label class="form-check-label accent-color" for="send_location ">Send location</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    function showPosition(position) {
+        document.getElementById("id_lat").value = position.coords.latitude;
+        document.getElementById("id_long").value = position.coords.longitude;
+    }
+
+    document.getElementById("send_location").addEventListener("click", function() {
+        if (this.checked) {
+            getLocation();
+        } else {
+            document.getElementById("id_lat").value = "";
+            document.getElementById("id_long").value = "";
+        }
+    });
+</script>
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    <strong>Form errors:</strong>
+    <ul>
+    {% for field in form %}
+        {% for error in field.errors %}
+            <li>{{ field.label }}: {{ error }}</li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+</body>
+</html>

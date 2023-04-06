@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+<style>
+    .welcome-message {
+        text-align: center;
+    }
+</style>
+{% block content %}
+<h1> Welcome to </h1>
+{% load static%}
+    <img src="{% static 'safecampusdark.png' %}" alt="Brand" class="img-fluid mb-2" style="max-width: 500px;" align-items="center">
+    <div class="welcome-message">{{ user.username }}</div>
+{% endblock %}
