@@ -1,4 +1,4 @@
-# Emergency-Management
+# SafeCampusPublic
 
 This repository will hold the actual code and associated documentation for public release and operation of the software
 
@@ -26,4 +26,4 @@ Navigate to the directory where the `manage.py` file is located in a terminal an
 3. Change the `SECRET_KEY` variable string created on line 23
 4. Save the `settings.py` file
 ### IMPORTANT NOTE: Do not share this key publicily, this key is used for hashing the stored user passwords for logins. Make sure to change it before deploying the server!
-# SafeCampusPublic
+
